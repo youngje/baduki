@@ -1,0 +1,64 @@
+package com.nhn.controller;
+
+import java.util.ArrayList;
+
+import com.nhn.model.Card;
+import com.nhn.model.Player;
+import com.nhn.model.PlayerCardDeck;
+import com.nhn.model.TableCardDeck;
+
+public class GameTable {
+	
+	private int minimunBet = 50;
+	private int seedMoney = 10000;
+	private int dealerFeeRate = 3;
+	
+	static final int FIRST_RAISE_POINT = 1;
+	static final int SECOND_RAISE_POINT = 2;
+	static final int THIRD_RAISE_POINT = 2;
+	static final int LAST_RAISE_POINT = 1;
+	
+	private ArrayList<Player> players;
+	private TableCardDeck tableCardDeck;
+	private BetManager betManager;
+	private RuleManager ruleManager;
+	
+	public GameTable() {
+		this.players = new ArrayList<Player>();
+		this.tableCardDeck = new TableCardDeck();
+		this.betManager = new BetManager();
+		this.ruleManager = new RuleManager();
+	}
+
+	public void prepareGame() {
+		
+		betManager.setMinimumBet(minimunBet);
+		betManager.setDealerFeeRate(dealerFeeRate);
+		betManager.setPlayersOnBetPockets(players);
+		betManager.setPlayersBetPoints(players , FIRST_RAISE_POINT);
+		betManager.gatherHelloMoneyFrom(players);
+		
+
+		//카드배분하고
+		tableCardDeck.prepareCardDeck();
+		for(Player player : players) {
+			tableCardDeck.getCardsFromDeckBy(4, player);			
+		}
+
+	}
+	
+	public void chooseFirstPlayer() {
+		//선 정하기
+	}
+
+	public void checkCards() {
+		//다들 제대로 된 카드 잘 가지고 있는지 playerDeck과 tableDeck의 owner와 확인
+		/*for (Player player : players) {
+			ArrayList<Card> cards = player.getPlayerCardDeck().getReceivedCards();
+			for(Card card : cards){
+				//card.getOwner() == tableCardDeck.getNewCards().get(card.);				
+			}		
+		}*/			
+	}
+	
+}

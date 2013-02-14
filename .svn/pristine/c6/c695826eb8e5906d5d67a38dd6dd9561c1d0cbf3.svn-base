@@ -1,0 +1,31 @@
+package com.nhn.controller;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class GameTableTest {
+
+	@Test
+	public void test게임테이블_세팅() {
+		//Given
+		GameTable gameTable = new GameTable();
+		
+		//When
+		
+		//Then
+		assertNotNull("게임테이블 세팅완료", gameTable);
+	}
+	
+	@Test
+	public void test게임테이블에서_게임준비완료() throws Exception {
+		//Given
+		GameTable gameTable = new GameTable();
+		
+		//When
+		gameTable.prepareGame();
+		
+		//Then
+		//assertNotNull("게임테이블 MinimumBet 세팅완료", gameTable.prepareGame());
+	}
+}

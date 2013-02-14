@@ -1,0 +1,40 @@
+package com.nhn.model;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import com.nhn.model.Card;
+
+import junit.framework.TestCase;
+
+public class CardTest extends TestCase {
+
+	@Test
+	public void test카드_객체_생성() throws Exception {
+		//Given
+		Card card = new Card();
+		//When
+
+		//Then
+		assertNotNull("카드 객체 생성", card);
+	}
+
+	@Test
+	public void test변수_2개_있는_카드_객체_생성() throws Exception {
+		//Given
+		Card card = new Card(2, Card.cardPatterns.clover);
+		
+		//Then
+				assertNotNull("카드 객체 생성", card);
+	}
+	
+	@Test
+	public void test변수_3개_있는_카드_객체_생성() throws Exception {
+		//Given
+		Card card = new Card(2, Card.cardPatterns.clover, "eunah");
+				
+		//Then
+		assertNotNull("카드 객체 생성", card);
+	}
+}

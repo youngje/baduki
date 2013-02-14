@@ -1,0 +1,31 @@
+package com.nhn.controller;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+
+import org.junit.Test;
+
+import com.nhn.controller.CardSorting;
+import com.nhn.model.Card;
+
+public class CardSortingTest {
+
+	@Test
+	public void test플레이어_카드덱_보기좋게_정렬() throws Exception {
+		ArrayList<Card> myCards = new ArrayList<Card>();
+		
+		myCards.add(new Card(4, Card.cardPatterns.clover));
+		myCards.add(new Card(8, Card.cardPatterns.clover));
+		myCards.add(new Card(4, Card.cardPatterns.clover));
+		myCards.add(new Card(10, Card.cardPatterns.diamond));
+		
+		CardSorting.sortCards(myCards);
+		
+		for(int i = 0 ; i < 3 ; i++){
+			assertTrue("i번째 정렬 확인 완료",myCards.get(i).getCardNum() <= myCards.get(i+1).getCardNum());
+		}
+		
+	}
+
+}

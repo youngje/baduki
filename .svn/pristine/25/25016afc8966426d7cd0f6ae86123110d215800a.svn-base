@@ -1,0 +1,21 @@
+package com.nhn.controller;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class GameTableTest {
+
+	@Test
+	public void test() {
+		//Given
+		GameTable gameTable = new GameTable();
+		
+		//When
+		//베팅메니져 사전설정
+		//플레이어 카드 사전설정
+		
+		//Then
+	}
+
+}

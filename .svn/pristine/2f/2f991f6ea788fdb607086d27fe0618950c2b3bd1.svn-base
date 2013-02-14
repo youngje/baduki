@@ -1,0 +1,86 @@
+package com.nhn.model;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+import org.apache.xerces.impl.xpath.regex.REUtil;
+
+import com.nhn.model.Card.cardPatterns;
+
+
+public class TableCardDeck {
+
+	private ArrayList<Card> newCards;
+	private ArrayList<Card> expiredCards;
+	private static final String NOT_USED = null;
+	private static final int ONE_DECK = 52;
+	private static final int SAME_SHAPE_OF_ONE_DECK = 13;
+	
+	public TableCardDeck() {
+		super();
+	}
+
+	public ArrayList<Card> getNewCards() {
+		return newCards;
+	}
+
+	public void setNewCards(ArrayList<Card> newCards) {
+		this.newCards = newCards;
+	}
+
+	public ArrayList<Card> getExpiredCards() {
+		return expiredCards;
+	}
+
+	public void setExpiredCards(ArrayList<Card> expiredCards) {
+		this.expiredCards = expiredCards;
+	}
+
+	public ArrayList<Card> prepareCardDeck() {
+		//52장 newCards 세팅
+		newCards = new ArrayList<Card>();
+		//expiredCards 초기화
+		expiredCards = new ArrayList<Card>();
+
+		for(Card.cardPatterns cardPattern : Card.cardPatterns.values()) {
+			for(int i = 1 ; i <= SAME_SHAPE_OF_ONE_DECK ; i++){
+				newCards.add(new Card(i, cardPattern));
+			}
+		}
+		return newCards;
+	}
+	
+	public ArrayList<Card> shuffleCardDeck(ArrayList<Card> cards) {
+		Collections.shuffle(cards);
+		return cards;
+	}
+	
+	public ArrayList<Card> getCardsFromDeckBy(int numberOfRequestedCards, Player player) {
+		ArrayList<Card> returnCards = new ArrayList<Card>();		
+		
+		for (int i = 0; i < ONE_DECK; i++) {
+			if (newCards.get(i).getOwner() == NOT_USED) {
+			returnCards.add(newCards.get(i));
+			newCards.get(i).setOwner(player.getPlayerName());
+			}
+				
+			if (returnCards.size() == numberOfRequestedCards) {
+				break;
+			}
+		}
+		return returnCards;
+	}
+	
+	public void putExpiredCards(ArrayList<Card> expireCards) {
+		for (int i = 0; i < expireCards.size(); i++) {
+			expiredCards.add(expireCards.get(i));
+			for (int j = 0; j < ONE_DECK; j++) {
+				if (newCards.get(j).getCardNum() == expireCards.get(i).getCardNum()
+						&& newCards.get(j).getCardPattern() == expireCards.get(i).getCardPattern()) {
+					newCards.get(j).setOwner("deleted");
+				}
+			}
+		}
+	}
+	
+}

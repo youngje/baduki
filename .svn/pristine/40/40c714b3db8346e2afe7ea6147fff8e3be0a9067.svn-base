@@ -1,0 +1,157 @@
+package com.nhn.controller;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+
+import com.nhn.Exceptions.CardsLengthException;
+import com.nhn.Exceptions.DuplicatedCardExistException;
+import com.nhn.model.Card;
+import com.nhn.model.HandRankings;
+import com.nhn.model.Player;
+
+public class RuleManager {
+	
+	private static final int CARDS_SET_LENGTH = 4;
+	
+	private static final int MADE = 4;
+	private static final int BASE = 3;
+	private static final int TWOBASE = 2;
+	private static final int NOBASE = 1;
+
+	private static final int GOLF_LARGEST_NUMBER = 4;
+	private static final int SECOND_THIRD_LARGEST_NUMBER = 5;
+	private static final int SEPERATOR_BETWEEN_SECOND_AND_THIRD = 3;
+	private static final int SECOND_3RD_NUM = 3;
+	
+	public PlayerComparator comparator;
+	
+	public RuleManager() {
+		this.comparator = new PlayerComparator();
+	}
+
+	public HandRankings checkHandRankings(ArrayList<Card> cards) throws Exception {
+		if (hasFourCards(cards) == false) {
+			throw new CardsLengthException(cards, CARDS_SET_LENGTH);
+		}
+		Card duplicatedCard = checkDuplicatedCards(cards);
+		if (duplicatedCard != null) {
+			throw new DuplicatedCardExistException(duplicatedCard); 
+		}
+		
+		CardSorting.sortCards(cards);
+		HandRankings handRankings = new HandRankings();
+		
+		ArrayList<Card> newMade = makeMade(cards);
+		int pattern = newMade.size();
+		
+		switch( pattern ) {
+		case MADE : 
+			handRankings = makeHandRankingWhenMade(newMade);
+			break;
+		case BASE : 
+			handRankings = makeHandRanking(newMade, HandRankings.rankings.base);
+			break;
+		case TWOBASE : 
+			handRankings = makeHandRanking(newMade, HandRankings.rankings.twobase);
+			break;
+		case NOBASE : 
+			handRankings = makeHandRanking(newMade, HandRankings.rankings.nobase);
+			break;
+		default :
+			handRankings = makeHandRanking(newMade, HandRankings.rankings.nobase);
+			break;
+		}
+		
+		return handRankings;
+	}
+
+	private HandRankings makeHandRankingWhenMade(ArrayList<Card> newMade) {
+		HandRankings handRankings = makeHandRanking(newMade, HandRankings.rankings.made);
+		
+		int largestNumOfCards = handRankings.getRankNum();
+		
+		if (largestNumOfCards == GOLF_LARGEST_NUMBER) {
+			handRankings.setRanking(HandRankings.rankings.golf);
+		} else if (largestNumOfCards == SECOND_THIRD_LARGEST_NUMBER) {	
+			if (newMade.get(SEPERATOR_BETWEEN_SECOND_AND_THIRD).getCardNum() == SECOND_3RD_NUM) {
+				handRankings.setRanking(HandRankings.rankings.second);
+			} else {
+				handRankings.setRanking(HandRankings.rankings.third);
+			}
+		}
+		
+		return handRankings;
+	}
+
+	public ArrayList<Card> makeMade(ArrayList<Card> cards) {
+		HashMap<Integer, Card> newMade = new HashMap<Integer, Card>();
+		HashSet<Card.cardPatterns> checkPatterns = new HashSet<Card.cardPatterns>();
+		CardSorting.sortCards(cards);
+		
+		for (Card card : cards) {
+			if (!checkPatterns.contains(card.getCardPattern())) {
+				if (!newMade.containsKey(card.getCardNum())) {
+					newMade.put(card.getCardNum(), card);
+					checkPatterns.add(card.getCardPattern());
+				}
+			}
+		}
+		
+		return getArrayListFromHashMap(newMade);
+	}
+	
+	public ArrayList<Card> getArrayListFromHashMap(HashMap<Integer, Card> cards) {
+			return new ArrayList<Card>( cards.values() );
+	}
+	
+	private HandRankings makeHandRanking(ArrayList<Card> cards, HandRankings.rankings ranking) {
+		HandRankings handRankings = new HandRankings();
+		
+		handRankings.setRanking(ranking);
+		handRankings.setRankNum(cards.get(cards.size() - 1).getCardNum());
+		
+		return handRankings;
+	}
+	
+	public ArrayList<Player> selectWinner(ArrayList<Player> playerList) {
+		Collections.sort(playerList, comparator);
+		
+		ArrayList<Player> winners = new ArrayList<Player>();
+		
+		int index = 0;
+		winners.add(playerList.get(index));
+		
+		while (!isOnlyWinner(playerList, index) && index < playerList.size() - 1) {
+			index++;
+			winners.add(playerList.get(index));
+		}
+		
+		return winners;
+	}
+
+	public boolean isOnlyWinner(ArrayList<Player> playerList, int index) {
+		 return comparator.compare(playerList.get(index), playerList.get(index + 1)) < 0;
+	}
+	
+	private boolean hasFourCards(ArrayList<Card> cards) {
+		if (cards.size() != CARDS_SET_LENGTH) {
+			return false;
+		}
+		return true;
+	}
+	
+	public Card checkDuplicatedCards(ArrayList<Card> cards) {
+		HashSet<String> notDuplicatedCards = new HashSet<String>();
+		
+		for (Card card : cards) {
+			boolean isDuplicated = !notDuplicatedCards.add(card.getCardPattern() + String.valueOf(card.getCardNum()));
+			if (isDuplicated) {
+				return card;
+			}
+		}
+		return null;
+	}
+	
+}

@@ -1,0 +1,37 @@
+package com.nhn.model;
+
+import java.util.ArrayList;
+
+public class PlayerCardDeck {
+	private ArrayList<Card> receivedCards;
+	private ArrayList<Card> selectedCards;
+	
+	public PlayerCardDeck() {
+		super();
+		this.selectedCards = new ArrayList<Card> ();
+		this.receivedCards = new ArrayList<Card> ();
+	}
+	public PlayerCardDeck(ArrayList<Card> cards) {
+		this.receivedCards = cards;
+	}
+	public ArrayList<Card> getReceivedCards() {
+		return receivedCards;
+	}
+
+	public void setReceivedCards(ArrayList<Card> receivedCards) {
+		this.receivedCards = receivedCards;
+	}
+	
+	public ArrayList<Card> getSelectedCards() {
+		return selectedCards;
+	}
+	
+	public void setSelectedCards(ArrayList<Card> selectedCards) {
+		this.selectedCards = selectedCards;
+	}
+	
+	public void selectCardForChange(Card card) {
+		selectedCards.add(card);
+	}
+
+}

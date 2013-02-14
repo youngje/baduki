@@ -1,0 +1,253 @@
+package com.nhn.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import com.nhn.model.Player;
+
+public class BetManager {
+	private HashMap<Player, Integer> eachBetMoneyPocket;
+	private HashMap<Player, Integer> eachBetPoints;
+	private int currentTableMoney;
+	private int currentRaiseMoney;
+	
+	private int dealerFeePercent;
+	private int minimumBet;
+
+	public HashMap<Player, Integer> getEachBetMoneyPocket() {
+		return eachBetMoneyPocket;
+	}
+
+	public void setEachBetMoneyPocket(HashMap<Player, Integer> eachBetMoneyPocket) {
+		this.eachBetMoneyPocket = eachBetMoneyPocket;
+	}
+
+	public HashMap<Player, Integer> getEachBetPoints() {
+		return eachBetPoints;
+	}
+
+	public void setEachBetPoints(HashMap<Player, Integer> eachBetPoints) {
+		this.eachBetPoints = eachBetPoints;
+	}
+
+	public int getCurrentTableMoney() {
+		return currentTableMoney;
+	}
+
+	public void setCurrentTableMoney(int currentTableMoney) {
+		this.currentTableMoney = currentTableMoney;
+	}
+
+	public int getCurrentRaiseMoney() {
+		return currentRaiseMoney;
+	}
+
+	public void setCurrentRaiseMoney(int currentRaiseMoney) {
+		this.currentRaiseMoney = currentRaiseMoney;
+	}
+
+	public int getDealerFeePercent() {
+		return dealerFeePercent;
+	}
+
+	public void setDealerFeeRate(int dealerFeePercent) {
+		this.dealerFeePercent = dealerFeePercent;
+	}
+
+	public int getMinimumBet() {
+		return minimumBet;
+	}
+
+	public void setMinimumBet(int minimumBet) {
+		this.minimumBet = minimumBet;
+	}
+
+	public BetManager() {
+		eachBetMoneyPocket = new HashMap<Player, Integer>();
+		eachBetPoints = new HashMap<Player, Integer>();
+		currentTableMoney = 0;
+		currentRaiseMoney = 0;
+	}
+	
+	//각 플레이어의 돈을 관리하는 저장소를 초기화합니다.
+	public void setPlayersOnBetPockets(ArrayList<Player> players) {
+		eachBetMoneyPocket.clear();
+		for (Player player : players) {
+			eachBetMoneyPocket.put(player, 0);
+			player.setAlive(true);
+		}
+	}
+	
+	//각 플레이어가 가지고 있는 레이스포인트를 초기화합니다. 올인한경우 포인트 안줍니다.
+	public void setPlayersBetPoints(ArrayList<Player> players , int raisePoint) {
+		eachBetPoints.clear();
+		for (Player player : players) {
+			if(player.getCurrentMoney() == 0) {
+				eachBetPoints.put(player, 0);
+			}
+			eachBetPoints.put(player, raisePoint);
+		}
+	}
+		
+	//플레이어가 레이스를 할 수 있는 레이스 포인트가 있습니까?
+	public boolean isPlayerPointAvailable(Player player) {
+		if (eachBetPoints.get(player) == 0) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+	//플레이어는 레이스를 할 수 있는 돈이 있습니까?
+	public boolean isPlayerBalanceAvailable(Player player, int money) {
+		if (player.getCurrentMoney() <= money) {
+			return false;
+		}
+		return true;
+	}
+	
+	//모든 플레이어의 레이스포인트가 소진되어 다음 사이클을 갈 수 있는 준비가 되었습니까?
+	public boolean isAllPlayersDone(ArrayList<Player> players) {
+		for (Player player : players) {
+			if (eachBetPoints.get(player) != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	//플레이어에게 딴돈을 주기 전에 딜러비를 제합니다.
+	public int takeDealerFeeFrom(int money) {
+		money -= (money * dealerFeePercent / 100);
+		return money;
+	}
+	
+	//모든 플레이어는 게임 시작과 동시에 학교갑니다.
+	public void gatherHelloMoneyFrom(ArrayList<Player> players) {
+		for (Player player : players) {
+			eachBetMoneyPocket.put(player, player.betAmountOf(minimumBet));
+			currentTableMoney += minimumBet;
+		}
+	}
+	
+	//판이 끝나고 승자에게 돈을 배분합니다.
+	//올인 플레이어가 승자인 경우 배분 후 차등이 가져갈 돈이 남으므로 false를 반환합니다.
+	public boolean isAllMoneyGivenTo(ArrayList<Player> winners) {
+		if(winners.size()==0) {
+			return true;
+		}
+		Player leastBetWinner = new Player();
+		leastBetWinner = findLittleWinner(winners);
+		int leastBetMoney = eachBetMoneyPocket.get(leastBetWinner);
+		int winMoney = 0;
+		Iterator<Player> it = eachBetMoneyPocket.keySet().iterator();
+		while (it.hasNext()) {
+			Player player = it.next();
+			if (eachBetMoneyPocket.get(player) >= leastBetMoney) {
+				winMoney += leastBetMoney;
+				eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) - leastBetMoney);
+			} else {
+				winMoney += eachBetMoneyPocket.get(player);
+				eachBetMoneyPocket.put(player, 0);
+			}
+		}
+		
+		int winnersCount = winners.size();
+		int winMoneyEach = winMoney / winnersCount;
+		for (Player winner : winners) {
+			int finalWinMoney = takeDealerFeeFrom(winMoneyEach);
+			winner.gainAountOf(finalWinMoney);
+		}
+		
+		winners.remove(leastBetWinner);
+		eachBetMoneyPocket.remove(leastBetWinner);
+		isAllMoneyGivenTo(winners);
+		
+		if(isEmptyEachPocket(eachBetMoneyPocket)){
+			return true;
+		}
+		return false;
+	}
+
+	//Extracted Method of giveMoneyTo()
+	private Player findLittleWinner(ArrayList<Player> winners) {
+		Player leastBetWinner = new Player();
+		leastBetWinner = winners.get(0);
+		for (Player winner : winners) {
+			if (eachBetMoneyPocket.get(leastBetWinner) > eachBetMoneyPocket.get(winner)) {
+				leastBetWinner = winner;
+			}
+		}
+		return leastBetWinner;
+	}
+	
+	//Extracted Method of giveMoneyTo()
+	private boolean isEmptyEachPocket(HashMap<Player, Integer> eachBetMoneyPocket) {
+		int sum = 0;
+		Iterator<Player> it = eachBetMoneyPocket.keySet().iterator();
+		while (it.hasNext()) {
+			Player player = it.next();
+			sum += eachBetMoneyPocket.get(player);
+		}
+		if(sum == 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	//플레이어의 베팅 액션 - 베팅할 돈이 부족한경우 있는 부족한 만큼만 베팅합니다.
+	
+	//앞 사람의 베팅 금액과 동일한 베팅 금액을 겁니다.
+	public void call(Player player) {
+		eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) + player.betAmountOf(currentRaiseMoney));
+		eachBetPoints.put(player, 0);
+		currentTableMoney += currentRaiseMoney;
+	}
+
+	//기본 판돈만 베팅합니다.
+	public void bing(Player player) {
+		eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) + player.betAmountOf(minimumBet));
+		eachBetPoints.put(player , eachBetPoints.get(player) - 1);
+		currentTableMoney += minimumBet;
+		currentRaiseMoney += minimumBet;
+	}
+
+	//전체판돈의 1/4금액을 베팅합니다.
+	public void quater(Player player) {
+		int quaterMoney = currentTableMoney / 4;
+		eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) + player.betAmountOf(currentRaiseMoney + quaterMoney));
+		eachBetPoints.put(player, eachBetPoints.get(player) - 1);
+		currentTableMoney += (quaterMoney + currentRaiseMoney);
+		currentRaiseMoney += quaterMoney;
+	}
+	
+	//전체판돈의 1/2금액을 베팅합니다.
+	public void half(Player player) {
+		int halfMoney = currentTableMoney / 2;
+		eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) + player.betAmountOf(currentRaiseMoney + halfMoney));
+		eachBetPoints.put(player, eachBetPoints.get(player) - 1);
+		currentTableMoney += (halfMoney + currentRaiseMoney);
+		currentRaiseMoney += halfMoney;
+	}	
+	
+	//앞사람이 베팅한 금액의 2배를 베팅합니다.
+	public void dadang(Player player) {
+		int dadangMoney = currentRaiseMoney * 2;
+		eachBetMoneyPocket.put(player, eachBetMoneyPocket.get(player) + player.betAmountOf(dadangMoney));
+		eachBetPoints.put(player, eachBetPoints.get(player) - 1);
+		currentTableMoney += dadangMoney;
+		currentRaiseMoney = dadangMoney;
+	}
+	
+	//머니를 베팅하지 않고 다음 카드를 받습니다.
+	public void check(Player player) {
+		eachBetPoints.put(player, 0);
+	}
+	
+	//해당 판의 게임을 포기합니다.
+	public void die(Player player) {
+		eachBetPoints.put(player, 0);
+		player.setAlive(false);
+	}
+}
